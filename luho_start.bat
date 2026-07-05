@@ -2,7 +2,7 @@
 chcp 950 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
-title 陸吼天堂 自動更新啟動器 v1.1 (2026-07-05)
+title 陸吼天堂 自動更新啟動器 v1.2 SHA256 (2026-07-05)
 
 rem ===== 必須放在遊戲資料夾 =====
 if not exist "Lin.bin" (
@@ -49,7 +49,7 @@ set "FNAME=%~1"
 set "RMD5=%~2"
 set "LMD5="
 if exist "%FNAME%" (
-    for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%" MD5 2^>nul') do (
+    for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%" SHA256 2^>nul') do (
         if not defined LMD5 set "LMD5=%%H"
     )
     set "LMD5=!LMD5: =!"
@@ -60,7 +60,7 @@ curl -s -L -m 600 "%BASEURL%/%FNAME%" -o "%FNAME%.new"
 if errorlevel 1 goto dlfail
 if not exist "%FNAME%.new" goto dlfail
 set "NMD5="
-for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%.new" MD5 2^>nul') do (
+for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%.new" SHA256 2^>nul') do (
     if not defined NMD5 set "NMD5=%%H"
 )
 set "NMD5=!NMD5: =!"
