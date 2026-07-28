@@ -2,7 +2,7 @@
 chcp 950 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
-title 陸吼天堂 自動更新啟動器 v1.3 (2026-07-05)
+title 陸吼天堂 自動更新啟動器 v1.4 (2026-07-29)
 
 rem ===== 必須放在遊戲資料夾 =====
 if not exist "Lin.bin" (
@@ -47,35 +47,38 @@ rem ===== 單檔檢查：md5 不同才下載，下載完再驗一次 =====
 :checkfile
 set "FNAME=%~1"
 set "RMD5=%~2"
+set "FSPATH=%FNAME:/=\%"
 rem 演算法自動偵測：清單指紋 64 字元=SHA256、32 字元=MD5（新舊清單通吃，防 v1.1 事件重演）
 set "ALGO=SHA256"
 if "%RMD5:~32,1%"=="" set "ALGO=MD5"
 set "LMD5="
-if exist "%FNAME%" (
-    for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%" %ALGO% 2^>nul') do (
+if exist "%FSPATH%" (
+    for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FSPATH%" %ALGO% 2^>nul') do (
         if not defined LMD5 set "LMD5=%%H"
     )
     set "LMD5=!LMD5: =!"
 )
 if /i "!LMD5!"=="%RMD5%" goto :eof
 echo [更新] %FNAME% 下載中（請稍候）...
-curl -s -f -L -m 600 "%BASEURL%/%FNAME%" -o "%FNAME%.new"
+for %%D in ("%FSPATH%") do set "FDIR=%%~dpD"
+if not exist "!FDIR!" mkdir "!FDIR!" >nul 2>&1
+curl -s -f -L -m 600 "%BASEURL%/%FNAME%" -o "%FSPATH%.new"
 if errorlevel 1 goto dlfail
-if not exist "%FNAME%.new" goto dlfail
+if not exist "%FSPATH%.new" goto dlfail
 set "NMD5="
-for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FNAME%.new" %ALGO% 2^>nul') do (
+for /f "skip=1 delims=" %%H in ('certutil -hashfile "%FSPATH%.new" %ALGO% 2^>nul') do (
     if not defined NMD5 set "NMD5=%%H"
 )
 set "NMD5=!NMD5: =!"
 if /i not "!NMD5!"=="%RMD5%" goto dlfail
-move /y "%FNAME%.new" "%FNAME%" >nul
+move /y "%FSPATH%.new" "%FSPATH%" >nul
 echo [更新] %FNAME% 完成。
 set "UPDATED=1"
 goto :eof
 
 :dlfail
 echo [失敗] %FNAME% 下載失敗，本次先用舊檔進遊戲（不影響遊玩）。
-del "%FNAME%.new" >nul 2>&1
+del "%FSPATH%.new" >nul 2>&1
 goto :eof
 
 :nonet
