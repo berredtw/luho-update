@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -41,13 +41,13 @@ body { background: #0d0d0d; color: #e0d8c8; font-family: "Microsoft JhengHei", "
   <div class="file-row">
     <div class="file-info">
       <div class="file-name">陸吼天堂.bat</div>
-      <div class="file-meta">放進遊戲資料夾後，以後都用它開遊戲：每次啟動自動檢查並更新對話檔與圖檔補丁，連不上更新站也照常開遊戲</div>
-      <div class="file-meta">最後更新：2026-09-20（v1.5）</div>
+      <div class="file-meta">放進遊戲資料夾後，以後都用它開遊戲：每次啟動自動檢查並更新對話檔，連不上更新站也照常開遊戲</div>
+      <div class="file-meta">最後更新：2026-07-05（v1.3）</div>
     </div>
     <a class="btn-download" href="luho_start.bat" download="陸吼天堂.bat">下載</a>
   </div>
   <div class="notice">📌 安裝：下載後放到你的天堂遊戲資料夾（有 Lin.bin 的那層），以後雙擊「陸吼天堂.bat」開遊戲即可。下方手動更新方式仍可照舊使用。</div>
-  <div class="notice">⚠ 2026-09-20 重要更新（v1.5）：請所有玩家<strong>重新下載本檔一次</strong>替換舊的。新版會自動更新「道具圖示、紋樣等圖檔」，不必再手動下載大包；之後啟動器若再改版也會自己更新，不會再麻煩你。</div>
+  <div class="notice">⚠ 2026-07-05 晚間曾下載過啟動器的玩家：請重新下載本檔一次替換（v1.3）。早期版本會誤報「下載失敗」（不影響進遊戲，只是更新不到）。</div>
 </div>
 
 <div class="card">
