@@ -2,7 +2,7 @@
 chcp 950 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
-title 陸吼天堂 自動更新啟動器 v1.5 (2026-09-20)
+title 陸吼天堂 自動更新啟動器 v1.6 (2026-09-20)
 
 rem ===== 必須放在遊戲資料夾 =====
 if not exist "Lin.bin" (
@@ -18,7 +18,7 @@ set "UPDATED=0"
 set "CHECKONLY=0"
 if /i "%~1"=="/checkonly" set "CHECKONLY=1"
 
-rem ===== v1.5 啟動器自我更新：換掉自己後自動重開（失敗就照常往下走）=====
+rem ===== 啟動器自我更新：換掉自己後自動重開（失敗就照常往下走）=====
 if exist "luho_start_new.bat" (
     fc /b "luho_start_new.bat" "%~f0" >nul 2>&1
     if errorlevel 1 (
@@ -95,7 +95,7 @@ echo [失敗] %FNAME% 下載失敗，本次先用舊檔進遊戲（不影響遊玩）。
 del "%FSPATH%.new" >nul 2>&1
 goto :eof
 
-rem ===== v1.5 圖檔補丁：只套沒套過的，失敗一律不擋遊戲 =====
+rem ===== 圖檔補丁：只套沒套過的，失敗一律不擋遊戲 =====
 :patches
 if not exist "applied_patches.txt" type nul > "applied_patches.txt"
 del "%PATCHLIST%" >nul 2>&1
@@ -113,28 +113,47 @@ set "PHASH=%~2"
 if "%PNAME%"=="" goto :eof
 findstr /x /c:"%PNAME%" "applied_patches.txt" >nul 2>&1
 if not errorlevel 1 goto :eof
-echo [圖檔] 發現新圖檔補丁 %PNAME%，下載中...
 if not exist "_patch" mkdir "_patch" >nul 2>&1
-curl -s -f -L -m 600 "%BASEURL%/patches/%PNAME%.dat" -o "_patch\%PNAME%.dat"
-if errorlevel 1 goto patchfail
+rem --- v1.6 快取：本機已有正確的補丁檔就不重複下載（省流量、失敗重試也不再重抓）---
+set "NEEDDL=1"
+if exist "_patch\%PNAME%.dat" (
+    set "CHASH="
+    for /f "skip=1 delims=" %%H in ('certutil -hashfile "_patch\%PNAME%.dat" SHA256 2^>nul') do (
+        if not defined CHASH set "CHASH=%%H"
+    )
+    set "CHASH=!CHASH: =!"
+    if /i "!CHASH!"=="%PHASH%" set "NEEDDL=0"
+)
+if "!NEEDDL!"=="1" (
+    echo [圖檔] 發現新圖檔補丁 %PNAME%，下載中...
+    curl -s -f -L -m 600 "%BASEURL%/patches/%PNAME%.dat" -o "_patch\%PNAME%.dat"
+    if errorlevel 1 goto patchfail
+    set "DHASH="
+    for /f "skip=1 delims=" %%H in ('certutil -hashfile "_patch\%PNAME%.dat" SHA256 2^>nul') do (
+        if not defined DHASH set "DHASH=%%H"
+    )
+    set "DHASH=!DHASH: =!"
+    if /i not "!DHASH!"=="%PHASH%" goto patchfail
+) else (
+    echo [圖檔] 套用先前已下載的補丁 %PNAME%...
+)
 curl -s -f -L -m 60 "%BASEURL%/patches/%PNAME%.manifest" -o "_patch\%PNAME%.manifest"
 if errorlevel 1 goto patchfail
 curl -s -f -L -m 60 "%BASEURL%/patches/apply_patch.ps1" -o "_patch\apply_patch.ps1"
 if errorlevel 1 goto patchfail
-set "DHASH="
-for /f "skip=1 delims=" %%H in ('certutil -hashfile "_patch\%PNAME%.dat" SHA256 2^>nul') do (
-    if not defined DHASH set "DHASH=%%H"
-)
-set "DHASH=!DHASH: =!"
-if /i not "!DHASH!"=="%PHASH%" goto patchfail
 powershell -NoProfile -ExecutionPolicy Bypass -File "_patch\apply_patch.ps1" -GameDir "%CD%" -PatchDir "%CD%\_patch" -PatchName "%PNAME%" -LogFile "_patch\%PNAME%.log"
-if errorlevel 1 goto patchfail
+if errorlevel 1 goto patchnotapply
 echo %PNAME%>>"applied_patches.txt"
 echo [圖檔] %PNAME% 套用完成。
 goto :eof
 
+:patchnotapply
+echo [提示] 圖檔補丁 %PNAME% 這次沒套用成功。
+echo        若你還沒安裝過「紋樣大圖包」，請先到更新站下載安裝一次，之後就會自動套用。
+goto :eof
+
 :patchfail
-echo [提示] 圖檔補丁 %PNAME% 本次未套用，不影響進遊戲（下次啟動會再試）。
+echo [提示] 圖檔補丁 %PNAME% 下載失敗，不影響進遊戲（下次啟動會再試）。
 goto :eof
 
 :nonet
