@@ -2,7 +2,7 @@
 chcp 950 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
-title 陸吼天堂 自動更新啟動器 v1.6 (2026-09-20)
+title 陸吼天堂 自動更新啟動器 v1.7 (2026-11-01)
 
 rem ===== 必須放在遊戲資料夾 =====
 if not exist "Lin.bin" (
@@ -100,12 +100,12 @@ rem ===== 圖檔補丁：只套沒套過的，失敗一律不擋遊戲 =====
 if not exist "applied_patches.txt" type nul > "applied_patches.txt"
 del "%PATCHLIST%" >nul 2>&1
 curl -s -f -L -m 15 "%BASEURL%/patches.txt" -o "%PATCHLIST%" 2>nul
-if errorlevel 1 goto launch
-if not exist "%PATCHLIST%" goto launch
+if errorlevel 1 goto emblem
+if not exist "%PATCHLIST%" goto emblem
 for /f "usebackq tokens=1,2 delims=|" %%A in ("%PATCHLIST%") do (
     call :checkpatch "%%A" "%%B"
 )
-goto launch
+goto emblem
 
 :checkpatch
 set "PNAME=%~1"
@@ -158,6 +158,25 @@ goto :eof
 
 :nonet
 echo [提示] 無法連線更新站，直接開遊戲。
+
+rem ===== 盟徽檔快滿就換回乾淨檔：客戶端上限 512 筆，裝滿後血盟角色進遊戲會閃退 =====
+rem 大小＝8＋396×筆數，158408＝400 筆（留 112 筆餘裕，避免玩到一半才滿）；任何一步失敗都照常開遊戲
+:emblem
+if not exist "Emblem781.dat" goto launch
+if not exist "Emblem781_clean.dat" goto launch
+tasklist 2>nul | findstr /i /r /c:"^TW[0-9]*\.bin" >nul
+if not errorlevel 1 goto launch
+set "ESIZE=0"
+for %%F in ("Emblem781.dat") do set "ESIZE=%%~zF"
+if !ESIZE! LSS 158408 goto launch
+move /y "Emblem781.dat" "Emblem781.dat.old" >nul 2>&1
+if errorlevel 1 goto launch
+copy /y "Emblem781_clean.dat" "Emblem781.dat" >nul 2>&1
+if errorlevel 1 (
+    move /y "Emblem781.dat.old" "Emblem781.dat" >nul 2>&1
+    goto launch
+)
+echo [修復] 血盟徽章紀錄快滿了，已自動整理（舊檔留存為 Emblem781.dat.old）。
 
 :launch
 if "%CHECKONLY%"=="1" (
